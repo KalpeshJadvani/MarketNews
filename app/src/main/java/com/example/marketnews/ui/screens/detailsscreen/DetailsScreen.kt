@@ -23,40 +23,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.marketnews.R
 import com.example.marketnews.data.model.Article
 import com.example.marketnews.utils.Constants
+import com.example.marketnews.utils.Constants.tagTile
+import com.example.marketnews.utils.Constants.tagTitleAuthor
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailsScreen(article: Article, navController: NavController){
+fun DetailsScreen(article: Article, navController: NavController) {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
 
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(text = article.author?:"No Author" )},
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
-                        }
-                    }
+        Scaffold(topBar = {
+            TopAppBar(title = {
+                Text(
+                    text = article.author ?: "No Author",
+                    modifier = Modifier.testTag(tagTitleAuthor)
                 )
-            },
-            content = {
-                PageContent(article)
-            }
-        )
+            }, navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                }
+            })
+        }, content = {
+            PageContent(article)
+        })
     }
 
 }
@@ -83,11 +84,17 @@ fun PageContent(item: Article) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = item.title?:"No Tile", style = MaterialTheme.typography.displayMedium)
+        Text(
+            text = item.title ?: "No Tile",
+            style = MaterialTheme.typography.displayMedium,
+            modifier = Modifier.testTag(tagTile)
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = item.description?:"No Description", style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = item.description ?: "No Description", style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 

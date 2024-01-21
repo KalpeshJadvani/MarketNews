@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -44,13 +45,15 @@ import com.example.marketnews.ui.component.ErrorPage
 import com.example.marketnews.ui.component.text.TitleMedium
 import com.example.marketnews.ui.navigation.Routes
 import com.example.marketnews.ui.theme.RowBackGround
+import com.example.marketnews.utils.Constants.tagArticlesList
+import com.example.marketnews.utils.Constants.tagCustomRow
 import com.example.marketnews.utils.network.DataState
 import com.google.gson.Gson
 
 
-
 @Composable
-fun MainScreen(navController :NavController
+fun MainScreen(
+    navController: NavController
 ) {
 
     val mainViewModel = hiltViewModel<MainViewModel>()
@@ -61,23 +64,34 @@ fun MainScreen(navController :NavController
     ) {
         mainViewModel.apiResponse.value?.let {
 
-            if (it is  DataState.Loading) {
-                CircularIndeterminateProgressBar(isDisplayed = mainViewModel.apiResponse.value is DataState.Loading, 0.4f)
-            }else if (it is DataState.Success<ApiModel>) {
-                newsList.value = (mainViewModel.apiResponse.value as  DataState.Success<ApiModel>).data.articles as ArrayList
+            if (it is DataState.Loading) {
+                CircularIndeterminateProgressBar(
+                    isDisplayed = mainViewModel.apiResponse.value is DataState.Loading, 0.4f
+                )
+            } else if (it is DataState.Success<ApiModel>) {
+                newsList.value =
+                    (mainViewModel.apiResponse.value as DataState.Success<ApiModel>).data.articles as ArrayList
 
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag(tagArticlesList),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
 
-                    items(newsList.value) {  item ->
-                        CustomRow(item, itemOkClick={objectData -> //This is the passed object
+                    items(newsList.value) { item ->
+                        CustomRow(item, itemOkClick = { objectData -> //This is the passed object
                             val gson = Gson()
                             val objectDataJson = gson.toJson(objectData, Article::class.java)
-                            Log.d("MyLog", "Send obj from MainScree, author: ${objectData.author}")
-                            navController.navigate(Routes.DETAILS_SCREEN.replace("{objectData}", "$objectDataJson"))
+                            Log.d(
+                                "MyLog", "Send obj from MainScree, author: ${objectData.author}"
+                            )
+                            navController.navigate(
+                                Routes.DETAILS_SCREEN.replace(
+                                    "{objectData}", "$objectDataJson"
+                                )
+                            )
                         })
                     }
 
@@ -86,10 +100,10 @@ fun MainScreen(navController :NavController
                 val error = mainViewModel.apiResponse.value
                 val newApiError = Throwable("$error")
 
-                ErrorPage(newApiError, onRetry={ ->
+                ErrorPage(newApiError, onRetry = { ->
                     mainViewModel.fetchNewsData()
                     Log.d("MyLog", "Error ======> $error")
-                } )
+                })
             }
         }
     }
@@ -97,8 +111,7 @@ fun MainScreen(navController :NavController
 
 @Composable
 fun CustomRow(
-    article: Article,
-    itemOkClick: (objectData: Article) -> Unit
+    article: Article, itemOkClick: (objectData: Article) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -107,8 +120,8 @@ fun CustomRow(
             .background(RowBackGround)
             .fillMaxWidth()
             .height(100.dp)
-            .clickable(onClick = { itemOkClick(article) }),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable(onClick = { itemOkClick(article) })
+            .testTag(tagCustomRow), verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
@@ -130,7 +143,7 @@ fun CustomRow(
         }
         Column {
             Text(
-                text = article.title?:"No Tile",
+                text = article.title ?: "No Tile",
                 modifier = Modifier
                     .padding(start = 10.dp, top = 3.dp)
                     .weight(2f),
@@ -145,8 +158,7 @@ fun CustomRow(
                     .align(Alignment.End)
                     .weight(1f),
 
-                )
-            {
+                ) {
                 Spacer(
                     modifier = Modifier
                         .padding(start = 5.dp, end = 5.dp)
@@ -155,7 +167,7 @@ fun CustomRow(
                         .background(Color.DarkGray),
                 )
                 TitleMedium(
-                    text = article.author?:"No Author",
+                    text = article.author ?: "No Author",
                     modifier = Modifier.padding(start = 10.dp),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

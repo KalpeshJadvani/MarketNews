@@ -18,8 +18,8 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled = true
+        testInstrumentationRunner = "com.example.marketnews.testrunner.CustomTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -97,9 +97,18 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.4.0")
 
+    implementation("androidx.multidex:multidex:2.0.1")
+
     //---------------------------- TESTING ----------------------------//
 
-    androidTestImplementation("com.google.dagger:hilt-android-testing:2.50")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2")
+    testImplementation("io.mockk:mockk:1.12.0")
+
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.9.1")
+    androidTestImplementation("io.mockk:mockk-android:1.11.0")
+
+    androidTestImplementation("com.google.dagger:hilt-android-testing:2.50@aar")
     kaptAndroidTest("com.google.dagger:hilt-android-compiler:2.50")
 
 }

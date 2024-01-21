@@ -17,14 +17,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repo : MarketNewsRepository
+    private val repo: MarketNewsRepository
 ) : ViewModel() {
     val apiResponse: MutableState<DataState<ApiModel>?> = mutableStateOf(null)
 
     init {
         fetchNewsData()
     }
-    fun fetchNewsData(){
+
+    fun fetchNewsData() {
 
         viewModelScope.launch {
             repo.getNews().onEach {
@@ -34,6 +35,4 @@ class MainViewModel @Inject constructor(
         }
 
     }
-
-
 }
