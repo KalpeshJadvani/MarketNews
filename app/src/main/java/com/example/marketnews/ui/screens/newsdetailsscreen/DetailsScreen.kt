@@ -1,4 +1,4 @@
-package com.example.marketnews.ui.screens.detailsscreen
+package com.example.marketnews.ui.screens.newsdetailsscreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -9,17 +9,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -28,42 +22,41 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.marketnews.R
-import com.example.marketnews.data.model.Article
-import com.example.marketnews.utils.Constants
+import com.example.marketnews.domain.model.NewsModel
+import com.example.marketnews.ui.component.CustomScaffold
 import com.example.marketnews.utils.Constants.tagTile
-import com.example.marketnews.utils.Constants.tagTitleAuthor
+import com.google.gson.Gson
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailsScreen(article: Article, navController: NavController) {
+fun DetailsScreen(navController: NavController) {
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val objectDataJson = navBackStackEntry?.arguments?.getString("objectData")
+    val gson = Gson()
+    val article = gson.fromJson(objectDataJson, NewsModel::class.java)
+
+    val author = article?.author ?: "No Author"
+    val title = article?.title ?: "No Tile"
+    val urlToImage = article?.urlToImage ?: "No Image"
+    val description = article?.description ?: "No Description"
+
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
-
-        Scaffold(topBar = {
-            TopAppBar(title = {
-                Text(
-                    text = article.author ?: "No Author",
-                    modifier = Modifier.testTag(tagTitleAuthor)
-                )
-            }, navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
-                }
-            })
-        }, content = {
-            PageContent(article)
+        CustomScaffold(title = author, onNavigateUp = { navController.popBackStack() }, content = {
+            PageContent(title = title, urlToImage = urlToImage, description = description)
         })
     }
 
 }
 
 @Composable
-fun PageContent(item: Article) {
+fun PageContent(title: String, urlToImage: String, description: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -71,7 +64,7 @@ fun PageContent(item: Article) {
             .verticalScroll(rememberScrollState())
     ) {
         AsyncImage(
-            model = item.urlToImage,
+            model = urlToImage,
             placeholder = painterResource(R.drawable.image_placeholder),
             error = painterResource(R.drawable.image_placeholder),
             contentScale = ContentScale.FillBounds,
@@ -85,15 +78,15 @@ fun PageContent(item: Article) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = item.title ?: "No Tile",
-            style = MaterialTheme.typography.displayMedium,
+            text = title,
+            style = MaterialTheme.typography.displaySmall,
             modifier = Modifier.testTag(tagTile)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = item.description ?: "No Description", style = MaterialTheme.typography.bodySmall
+            text = description, style = MaterialTheme.typography.bodySmall
         )
     }
 }
@@ -101,5 +94,5 @@ fun PageContent(item: Article) {
 @Composable
 @Preview(showBackground = true, showSystemUi = true)
 fun DetailsScreenPreview() {
-    DetailsScreen(Constants.article, rememberNavController())
+    DetailsScreen(rememberNavController())
 }

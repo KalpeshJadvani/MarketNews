@@ -1,4 +1,5 @@
-package com.example.marketnews.ui.screens.mainscreen
+package com.example.marketnews.ui.screens.newslistscreen
+
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -19,8 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -38,72 +41,69 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.marketnews.R
-import com.example.marketnews.data.model.ApiModel
-import com.example.marketnews.data.model.Article
+import com.example.marketnews.domain.model.NewsModel
 import com.example.marketnews.ui.component.CircularIndeterminateProgressBar
+import com.example.marketnews.ui.component.CustomScaffold
 import com.example.marketnews.ui.component.ErrorPage
 import com.example.marketnews.ui.component.text.TitleMedium
-import com.example.marketnews.ui.navigation.Routes
 import com.example.marketnews.ui.theme.RowBackGround
 import com.example.marketnews.utils.Constants.tagArticlesList
 import com.example.marketnews.utils.Constants.tagCustomRow
 import com.example.marketnews.utils.network.DataState
-import com.google.gson.Gson
 
 
 @Composable
-fun MainScreen(
+fun NewsListScreen(
     navController: NavController
 ) {
 
-    val mainViewModel = hiltViewModel<MainViewModel>()
-    val newsList = remember { mutableStateOf(arrayListOf<Article>()) }
+    val mainViewModel = hiltViewModel<NewsListViewModel>()
+    val dataState by mainViewModel.newsListState.collectAsState()
+    val title: String = stringResource(R.string.app_name)
+
+    LaunchedEffect(Unit) {
+        mainViewModel.fetchNewsData()
+    }
+
 
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
-        mainViewModel.apiResponse.value?.let {
-
-            if (it is DataState.Loading) {
-                CircularIndeterminateProgressBar(
-                    isDisplayed = mainViewModel.apiResponse.value is DataState.Loading, 0.4f
-                )
-            } else if (it is DataState.Success<ApiModel>) {
-                newsList.value =
-                    (mainViewModel.apiResponse.value as DataState.Success<ApiModel>).data.articles as ArrayList
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag(tagArticlesList),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-
-                    items(newsList.value) { item ->
-                        CustomRow(item, itemOkClick = { objectData -> //This is the passed object
-                            val gson = Gson()
-                            val objectDataJson = gson.toJson(objectData, Article::class.java)
-                            Log.d(
-                                "MyLog", "Send obj from MainScree, author: ${objectData.author}"
-                            )
-                            navController.navigate(
-                                Routes.DETAILS_SCREEN.replace(
-                                    "{objectData}", "$objectDataJson"
-                                )
-                            )
-                        })
+        CustomScaffold(title = title, onNavigateUp = { /*TODO*/ }) {
+            dataState?.let {
+                when (it) {
+                    is DataState.Loading -> {
+                        CircularIndeterminateProgressBar(
+                            isDisplayed = true, 0.4f
+                        )
                     }
 
-                }
-            } else if (it is DataState.Error) {
-                val error = mainViewModel.apiResponse.value
-                val newApiError = Throwable("$error")
+                    is DataState.Success -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag(tagArticlesList),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            items(it.data) { item ->
+                                CustomRow(item, itemOkClick = { objectData ->
+                                    mainViewModel.onNewsItemClick(objectData, navController)
+                                })
+                            }
+                        }
+                    }
 
-                ErrorPage(newApiError, onRetry = { ->
-                    mainViewModel.fetchNewsData()
-                    Log.d("MyLog", "Error ======> $error")
-                })
+                    is DataState.Error -> {
+                        val error = it.exception
+                        val newApiError = Throwable("$error")
+
+                        ErrorPage(newApiError, onRetry = { ->
+                            mainViewModel.fetchNewsData()
+                            Log.d("MyLog", "Error ======> $error")
+                        })
+                    }
+                }
             }
         }
     }
@@ -111,7 +111,7 @@ fun MainScreen(
 
 @Composable
 fun CustomRow(
-    article: Article, itemOkClick: (objectData: Article) -> Unit
+    article: NewsModel, itemOkClick: (objectData: NewsModel) -> Unit
 ) {
     Row(
         modifier = Modifier

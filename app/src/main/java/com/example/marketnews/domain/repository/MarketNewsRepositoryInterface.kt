@@ -1,4 +1,4 @@
-package com.example.marketnews.data.repository
+package com.example.marketnews.domain.repository
 
 import com.example.marketnews.data.model.ApiModel
 import com.example.marketnews.utils.network.DataState

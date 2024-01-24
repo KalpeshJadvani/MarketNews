@@ -1,6 +1,6 @@
-package com.example.marketnews.ui.screens.mainscreen
+package com.example.marketnews.ui.screens.newslistscreen
 
-import FakeMarketNewsRepository
+import com.example.marketnews.repository.FakeMarketNewsRepository
 import com.example.marketnews.data.model.ApiModel
 import com.example.marketnews.assets.Constants
 import com.example.marketnews.assets.Constants.netWorkError
